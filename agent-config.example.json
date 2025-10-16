@@ -1,0 +1,7 @@
+{
+  "server_url": "https://localhost:8443",
+  "agent_id": "my-server-01",
+  "agent_name": "My Server 01",
+  "report_interval": 5,
+  "tls_skip_verify": true
+}
