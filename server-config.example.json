@@ -1,0 +1,13 @@
+{
+  "server_addr": ":8443",
+  "tls_cert_file": "",
+  "tls_key_file": "",
+  "db_path": "./monitor.db",
+  "admin_password": "admin123",
+  "smtp_host": "",
+  "smtp_port": 587,
+  "smtp_user": "",
+  "smtp_password": "",
+  "email_from": "",
+  "alert_email": ""
+}
