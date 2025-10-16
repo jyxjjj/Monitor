@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./server-config.json:/app/server-config.json
+      - ./data:/app/data
+    restart: unless-stopped
+    environment:
+      - CONFIG_PATH=/app/server-config.json
+
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    volumes:
+      - ./agent-config.json:/app/agent-config.json
+    restart: unless-stopped
+    environment:
+      - CONFIG_PATH=/app/agent-config.json
+    depends_on:
+      - server

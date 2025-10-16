@@ -1,0 +1,14 @@
+[Unit]
+Description=Monitor Server
+After=network.target
+
+[Service]
+Type=simple
+User=monitor
+WorkingDirectory=/opt/monitor
+ExecStart=/opt/monitor/monitor-server --config /etc/monitor/server-config.json
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

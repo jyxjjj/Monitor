@@ -1,0 +1,14 @@
+[Unit]
+Description=Monitor Agent
+After=network.target
+
+[Service]
+Type=simple
+User=monitor
+WorkingDirectory=/opt/monitor
+ExecStart=/opt/monitor/monitor-agent --config /etc/monitor/agent-config.json
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
