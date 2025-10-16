@@ -27,10 +27,29 @@ type Server struct {
 
 // NewServer creates a new server instance
 func NewServer(config *models.Config) (*Server, error) {
-	db, err := NewDatabase(config.DBPath)
+	// Support backward compatibility with DBPath
+	if config.Database.Driver == "" && config.DBPath != "" {
+		config.Database.Driver = "sqlite3"
+		config.Database.Database = config.DBPath
+	}
+	
+	// Set defaults if not configured
+	if config.Database.Driver == "" {
+		config.Database.Driver = "sqlite3"
+		config.Database.Database = "./monitor.db"
+	}
+	
+	db, err := NewDatabase(config.Database)
 	if err != nil {
 		return nil, err
 	}
+
+	// Check if database is installed
+	installed, err := db.CheckInstalled()
+	if err != nil {
+		return nil, err
+	}
+	config.Installed = installed
 
 	alerter := NewAlerter(db, config)
 
@@ -44,6 +63,10 @@ func NewServer(config *models.Config) (*Server, error) {
 // Start starts the server
 func (s *Server) Start() error {
 	mux := http.NewServeMux()
+
+	// Installation endpoints (no auth required)
+	mux.HandleFunc("/api/install/check", s.handleInstallCheck)
+	mux.HandleFunc("/api/install/setup", s.handleInstallSetup)
 
 	// API endpoints
 	mux.HandleFunc("/api/login", s.handleLogin)
@@ -331,6 +354,47 @@ func (s *Server) handleStatic(w http.ResponseWriter, r *http.Request) {
 </html>`
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(html))
+}
+
+// handleInstallCheck checks if the database is installed
+func (s *Server) handleInstallCheck(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]bool{
+		"installed": s.config.Installed,
+	})
+}
+
+// handleInstallSetup handles database installation
+func (s *Server) handleInstallSetup(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Check if already installed
+	if s.config.Installed {
+		http.Error(w, "Database already installed", http.StatusBadRequest)
+		return
+	}
+
+	// Initialize schema
+	if err := s.db.InitSchema(); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to initialize schema: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	s.config.Installed = true
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "Database installed successfully",
+	})
 }
 
 // Close closes the server resources

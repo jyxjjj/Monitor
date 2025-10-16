@@ -52,19 +52,33 @@ type Alert struct {
 	Resolved    bool      `json:"resolved"`
 }
 
+// DatabaseConfig represents database configuration
+type DatabaseConfig struct {
+	Driver   string `json:"driver"`   // sqlite, mysql, postgres
+	Host     string `json:"host"`     // for mysql/postgres
+	Port     int    `json:"port"`     // for mysql/postgres
+	Database string `json:"database"` // database name or sqlite file path
+	Username string `json:"username"` // for mysql/postgres
+	Password string `json:"password"` // for mysql/postgres
+	Charset  string `json:"charset"`  // for mysql
+	SSLMode  string `json:"sslmode"`  // for postgres
+}
+
 // Config represents server configuration
 type Config struct {
-	ServerAddr    string `json:"server_addr"`
-	TLSCertFile   string `json:"tls_cert_file"`
-	TLSKeyFile    string `json:"tls_key_file"`
-	DBPath        string `json:"db_path"`
-	AdminPassword string `json:"admin_password"`
-	SMTPHost      string `json:"smtp_host"`
-	SMTPPort      int    `json:"smtp_port"`
-	SMTPUser      string `json:"smtp_user"`
-	SMTPPassword  string `json:"smtp_password"`
-	EmailFrom     string `json:"email_from"`
-	AlertEmail    string `json:"alert_email"`
+	ServerAddr    string         `json:"server_addr"`
+	TLSCertFile   string         `json:"tls_cert_file"`
+	TLSKeyFile    string         `json:"tls_key_file"`
+	Database      DatabaseConfig `json:"database"`
+	DBPath        string         `json:"db_path"` // deprecated, use Database.Database
+	AdminPassword string         `json:"admin_password"`
+	SMTPHost      string         `json:"smtp_host"`
+	SMTPPort      int            `json:"smtp_port"`
+	SMTPUser      string         `json:"smtp_user"`
+	SMTPPassword  string         `json:"smtp_password"`
+	EmailFrom     string         `json:"email_from"`
+	AlertEmail    string         `json:"alert_email"`
+	Installed     bool           `json:"installed"` // whether database is installed
 }
 
 // AgentConfig represents agent configuration

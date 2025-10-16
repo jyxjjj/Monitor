@@ -6,7 +6,10 @@
 
 - 🔐 **安全认证**: Admin 用户登录系统，JWT 认证
 - 📊 **指标收集**: CPU、内存、磁盘、网络、负载等基础指标
-- 📈 **历史数据**: SQLite 存储历史数据，React+MUI 可视化展示
+- 🗄️ **多数据库支持**: SQLite、MySQL/MariaDB 11.8、PostgreSQL 18
+- 📈 **历史数据**: 数据库存储历史数据，React+MUI 可视化展示
+- 🎯 **Laravel 风格**: 数据库表结构采用 Laravel 命名规范
+- 🌐 **Web 安装**: 首次运行通过 Web 界面一键安装数据库
 - 🚨 **告警系统**: 支持阈值触发的告警规则
 - 📧 **邮件通知**: 告警邮件通知功能
 - 💻 **跨平台 Agent**: 支持 Linux/Windows/macOS
@@ -60,23 +63,54 @@ go build -o monitor-agent ./cmd/agent
 
 首次运行服务器会自动生成默认配置文件：
 
+**SQLite 配置（默认）:**
 ```json
 {
   "server_addr": ":8443",
-  "tls_cert_file": "",
-  "tls_key_file": "",
-  "db_path": "./monitor.db",
+  "database": {
+    "driver": "sqlite3",
+    "database": "./monitor.db"
+  },
   "admin_password": "admin123",
-  "smtp_host": "",
-  "smtp_port": 587,
-  "smtp_user": "",
-  "smtp_password": "",
-  "email_from": "",
-  "alert_email": ""
+  "installed": false
 }
 ```
 
-**注意**: 请修改 `admin_password` 为安全密码。如需启用 TLS，配置证书路径。
+**MySQL/MariaDB 11.8 配置:**
+```json
+{
+  "database": {
+    "driver": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "database": "monitor",
+    "username": "root",
+    "password": "password",
+    "charset": "utf8mb4"
+  }
+}
+```
+
+**PostgreSQL 18 配置:**
+```json
+{
+  "database": {
+    "driver": "postgres",
+    "host": "localhost",
+    "port": 5432,
+    "database": "monitor",
+    "username": "postgres",
+    "password": "password",
+    "sslmode": "disable"
+  }
+}
+```
+
+**注意**: 
+- 请修改 `admin_password` 为安全密码
+- 首次访问会显示 Web 安装界面，点击按钮即可自动创建数据库表
+- 使用 MySQL/PostgreSQL 时需要提前创建数据库（不需要创建表结构）
+- 如需启用 TLS，配置证书路径
 
 #### Agent 配置 (agent-config.json)
 

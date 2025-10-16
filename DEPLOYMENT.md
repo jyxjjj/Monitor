@@ -19,8 +19,12 @@
 - Linux/Windows/macOS
 - 512MB RAM (最小)
 - 1GB 磁盘空间
-- Go 1.21+ (编译需要)
+- Go 1.23+ (编译需要)
 - Node.js 16+ (构建前端需要)
+- 数据库（任选其一）:
+  - SQLite 3 (默认，无需安装)
+  - MySQL/MariaDB 11.8+
+  - PostgreSQL 18+
 
 ### Agent 端
 - Linux/Windows/macOS
@@ -191,21 +195,61 @@ sudo journalctl -u monitor-agent -f
 
 ### 服务器配置 (server-config.json)
 
+**SQLite 配置（默认）:**
 ```json
 {
-  "server_addr": ":8443",           // 监听地址和端口
-  "tls_cert_file": "server.crt",    // TLS 证书文件路径 (可选)
-  "tls_key_file": "server.key",     // TLS 密钥文件路径 (可选)
-  "db_path": "./monitor.db",        // 数据库文件路径
-  "admin_password": "admin123",     // 管理员密码 (请修改)
-  "smtp_host": "smtp.gmail.com",    // SMTP 服务器
-  "smtp_port": 587,                 // SMTP 端口
-  "smtp_user": "user@gmail.com",    // SMTP 用户名
-  "smtp_password": "password",      // SMTP 密码
-  "email_from": "user@gmail.com",   // 发件人邮箱
-  "alert_email": "alert@example.com" // 告警接收邮箱
+  "server_addr": ":8443",
+  "database": {
+    "driver": "sqlite3",
+    "database": "./monitor.db"
+  },
+  "admin_password": "admin123",
+  "installed": false
 }
 ```
+
+**MySQL/MariaDB 11.8+ 配置:**
+```json
+{
+  "server_addr": ":8443",
+  "database": {
+    "driver": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "database": "monitor",
+    "username": "root",
+    "password": "password",
+    "charset": "utf8mb4"
+  },
+  "admin_password": "admin123",
+  "installed": false
+}
+```
+
+**PostgreSQL 18+ 配置:**
+```json
+{
+  "server_addr": ":8443",
+  "database": {
+    "driver": "postgres",
+    "host": "localhost",
+    "port": 5432,
+    "database": "monitor",
+    "username": "postgres",
+    "password": "password",
+    "sslmode": "disable"
+  },
+  "admin_password": "admin123",
+  "installed": false
+}
+```
+
+**说明:**
+- `driver`: 数据库驱动，支持 `sqlite3`, `mysql`, `postgres`
+- `database`: SQLite 为文件路径，MySQL/PostgreSQL 为数据库名
+- `installed`: 数据库是否已安装表结构，首次运行为 `false`
+- 使用 MySQL/PostgreSQL 时需要提前手动创建数据库（不需要创建表）
+- 首次访问 Web 界面会提示安装数据库表结构
 
 ### Agent 配置 (agent-config.json)
 
@@ -223,9 +267,113 @@ sudo journalctl -u monitor-agent -f
 
 1. **admin_password**: 强烈建议修改为强密码
 2. **server_addr**: 如果使用反向代理，可以使用 `:8080`
-3. **tls_cert_file/tls_key_file**: 生产环境建议启用 HTTPS
-4. **report_interval**: 建议值 5-60 秒
-5. **tls_skip_verify**: 生产环境应设置为 `false`
+3. **database.driver**: 选择数据库类型
+4. **tls_cert_file/tls_key_file**: 生产环境建议启用 HTTPS
+5. **report_interval**: 建议值 5-60 秒
+6. **tls_skip_verify**: 生产环境应设置为 `false`
+
+## 数据库配置
+
+### SQLite（推荐入门使用）
+
+无需额外配置，开箱即用。适合小型部署和测试环境。
+
+### MySQL/MariaDB 11.8+
+
+1. **创建数据库**
+
+```bash
+mysql -u root -p
+```
+
+```sql
+CREATE DATABASE monitor CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'monitor'@'localhost' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON monitor.* TO 'monitor'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+2. **配置连接**
+
+更新 `server-config.json`:
+```json
+{
+  "database": {
+    "driver": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "database": "monitor",
+    "username": "monitor",
+    "password": "your_password",
+    "charset": "utf8mb4"
+  }
+}
+```
+
+3. **启动服务器并访问 Web 界面**
+
+首次访问会显示安装向导，点击"Install Database"按钮即可自动创建表结构。
+
+### PostgreSQL 18+
+
+1. **创建数据库**
+
+```bash
+sudo -u postgres psql
+```
+
+```sql
+CREATE DATABASE monitor;
+CREATE USER monitor WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE monitor TO monitor;
+\q
+```
+
+2. **配置连接**
+
+更新 `server-config.json`:
+```json
+{
+  "database": {
+    "driver": "postgres",
+    "host": "localhost",
+    "port": 5432,
+    "database": "monitor",
+    "username": "monitor",
+    "password": "your_password",
+    "sslmode": "disable"
+  }
+}
+```
+
+3. **启动服务器并访问 Web 界面**
+
+首次访问会显示安装向导，点击"Install Database"按钮即可自动创建表结构。
+
+### 数据库表结构
+
+系统采用 Laravel 风格的表命名规范：
+
+- **agents**: 存储 Agent 信息
+  - `id`, `name`, `host`, `last_seen_at`, `status`, `platform`, `version`
+  - `created_at`, `updated_at`
+  
+- **metrics**: 存储监控指标
+  - `id`, `agent_id`, `cpu_percent`, `memory_used`, `memory_total`
+  - `disk_used`, `disk_total`, `network_rx`, `network_tx`
+  - `load_avg_1`, `load_avg_5`, `load_avg_15`, `created_at`
+  
+- **alert_rules**: 存储告警规则
+  - `id`, `agent_id`, `metric_type`, `threshold`, `operator`
+  - `duration`, `enabled`, `description`
+  - `created_at`, `updated_at`
+  
+- **alerts**: 存储告警历史
+  - `id`, `rule_id`, `agent_id`, `message`, `value`, `resolved`
+  - `created_at`, `updated_at`
+
+所有表都有适当的索引和外键约束，确保数据完整性和查询性能。
 
 ## TLS 配置
 
