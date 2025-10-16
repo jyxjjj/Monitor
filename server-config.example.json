@@ -1,0 +1,19 @@
+{
+  "server_addr": ":8443",
+  "tls_cert_file": "",
+  "tls_key_file": "",
+  "database": {
+    "driver": "sqlite3",
+    "database": "./monitor.db"
+  },
+  "admin_password": "admin123",
+  "smtp_host": "",
+  "smtp_port": 587,
+  "smtp_user": "",
+  "smtp_password": "",
+  "email_from": "",
+  "alert_email": "",
+  "installed": false,
+  "_comment_mysql": "For MySQL/MariaDB, use: {\"driver\": \"mysql\", \"host\": \"localhost\", \"port\": 3306, \"database\": \"monitor\", \"username\": \"root\", \"password\": \"password\", \"charset\": \"utf8mb4\"}",
+  "_comment_postgres": "For PostgreSQL, use: {\"driver\": \"postgres\", \"host\": \"localhost\", \"port\": 5432, \"database\": \"monitor\", \"username\": \"postgres\", \"password\": \"password\", \"sslmode\": \"disable\"}"
+}

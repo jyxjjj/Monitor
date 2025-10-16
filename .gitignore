@@ -1,0 +1,50 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+monitor-server
+monitor-agent
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+node_modules/
+vendor/
+
+# Build outputs
+/frontend/build
+/dist
+/build
+
+# Config files (may contain sensitive data)
+server-config.json
+agent-config.json
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# TLS certificates
+*.pem
+*.crt
+*.key
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
