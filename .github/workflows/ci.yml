@@ -1,64 +1,50 @@
 name: CI - Build and Upload Artifacts
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+    build:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.25.2'
+            - name: Set up Go
+              uses: actions/setup-go@v4
+              with:
+                  go-version: "1.25.2"
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.20.0'
+            - name: Install Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22.20.0"
 
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+            - name: Run make
+              working-directory: ${{ github.workspace }}
+              run: |
+                  go mod download
+                  cd frontend
+                  npm i
+                  cd ..
+                  make all frontend
 
-      - name: Cache Node modules
-        uses: actions/cache@v4
-        with:
-          path: frontend/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+            - name: Upload Go binaries
+              if: success()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: binaries
+                  path: |
+                      monitor-agent
+                      monitor-server
 
-      - name: Run make all frontend
-        working-directory: ${{ github.workspace }}
-        run: |
-          make all frontend
-
-      - name: Upload Go binaries
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: binaries
-          path: |
-            monitor-agent
-            monitor-server
-
-      - name: Upload frontend build
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-build
-          path: frontend/build
+            - name: Upload frontend build
+              if: success()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: frontend-build
+                  path: frontend/build
