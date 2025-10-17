@@ -41,7 +41,7 @@ jobs:
       run: go test -v ./...
     
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: binaries
         path: |
@@ -90,7 +90,7 @@ jobs:
         go build -o monitor-agent-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} ./cmd/agent
     
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: monitor-${{ matrix.goos }}-${{ matrix.goarch }}
         path: monitor-*
